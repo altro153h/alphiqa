@@ -2,12 +2,13 @@ module translator;
 import std::io;
 import std::collections::list;
 
-const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_.:";
-const NUMBERS = "1234567890.⁄_";
-const MERGE = "¶ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_1234567890.:";
-const PARENOPEN = "([{";
-const PARENCLOSE = ")]}";
-const PAREN = "()[]{}";
+const LETTERS = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_.:`;
+const NUMBERS = `1234567890.⁄_`;
+const MERGE = `¶``"'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_1234567890.:`;
+const PARENOPEN = `([{`;
+const PARENCLOSE = `)]}`;
+const PAREN = `()[]{}`;
+const QUOTE = ```"'`;
 
 enum TokenType
 {
@@ -52,11 +53,14 @@ fn short order(String symbol)
         case ">=": return -3;
         case "~=": return -2;
         case "===": return -2;
-        case "<:": return -3;
-        case ":>": return -3;
+        case "<*": return -3;
+        case "*>": return -3;
         case "#": return 2;
-        case "..": return 0;
+        case "+++": return 1;
+        case "<->": return 0;
         case ",": return -64;
+        case "<>?": return -6;
+        case "!<>": return -6;
         case "": return 6;
         default: return 63;
     }
@@ -98,7 +102,8 @@ fn List{Token} lexer(String text)
             }
             //else if (yard.len() > 1)
             //{
-            //    while (yard.len() > 1) { result.push(yard[yard.len()-1]); yard.pop()!!; }
+            //    sz length = yard.len();
+            //    while (length > 1) { result.push(yard[length-1]); yard.pop()!!; length--; }
             //}
             if (digit != "")
             {
@@ -106,6 +111,19 @@ fn List{Token} lexer(String text)
                 {
                     charidx += 2;
                     while (charidx < text.len && text[charidx..charidx] != "\n")
+                    {
+                        word.append(text[charidx..charidx]);
+                        charidx++;
+                    };
+                    String quotes = word.str_view().treplace("`","``");
+                    word = {};
+                    word.append("`"); word.append(quotes); word.append("`");
+                }
+                else if (QUOTE.contains(digit))
+                {
+                    String quote = digit;
+                    charidx += 1;
+                    while (charidx < text.len && text[charidx..charidx] != quote)
                     {
                         word.append(text[charidx..charidx]);
                         charidx++;
