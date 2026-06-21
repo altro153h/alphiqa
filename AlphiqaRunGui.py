@@ -41,27 +41,17 @@ root.title("Alphiqa")
 root.geometry("800x600")
 root.configure(bg="#121212")
 
-run = tkinter.Button(root,text="[COMPILE - RUN]",activeforeground="#00FF00",font=("Menlo",15),relief="flat",cursor="hand",command=EXEC) #,bg="#1a1a1a",fg="#FFFFFF",activebackground="#333333"
+run = tkinter.Button(root,text="[COMPILE - RUN]",bg="#1a1a1a",fg="#FFFFFF",activebackground="#333333",activeforeground="#00FF00",font=("Menlo",15),relief="flat",cursor="hand",command=EXEC)
 run.pack()
 
 main_pane = tkinter.PanedWindow(root,orient="vertical",bg="#121212",bd=0,sashrelief="flat")
-main_pane.pack(expand=True,fill="both",padx=15,pady=15)
-
-#block_pane = tkinter.PanedWindow(root,orient="horizontal",bg="#121212",bd=0,sashrelief="flat")
+main_pane.pack(expand=True,fill='both',padx=15,pady=15)
 
 editor = tkinter.Text(root,bg="#1a1a1a",fg="#FFFFFF",selectbackground="#BBDDFF",font=("Menlo",15),undo=True,padx=15,pady=15)
 main_pane.add(editor,stretch="always")
 
 shell = tkinter.Text(root,bg="#1a1a1a",fg="#FFFFFF",selectbackground="#BBDDFF",font=("Menlo",15),padx=15,pady=15)
 main_pane.add(shell,stretch="always")
-
-#textblock = tkinter.Text(root,bg="#1a1a1a",fg="#FFFFFF",selectbackground="#BBDDFF",font=("Menlo",15),padx=15,pady=15)
-#textblock.insert("end","""
-#()+() ()-() ()*() ()/() ()**() ()//() ()%() ()&() ()|() ()^()
-#io:print()
-#""")
-#textblock.config(state="disabled")
-#textblock.pack(expand=True,fill="both",side="right")
 
 #editor.tag_config("Digit",fg="#00FFFF")
 #editor.tag_config("String",fg="#00FF00")
@@ -79,13 +69,9 @@ main_pane.add(shell,stretch="always")
 
 root.mainloop()
 
-#.pack(expand=True,fill='both',padx=20,pady=10)"never"BBBB,MainModules'both'
+#.pack(expand=True,fill='both',padx=20,pady=10)"never"BBBB,MainModules
 
 #_ColorControl
-
-#io:pri(mth:rdom.rd())
-
-test="""io:print(true<>?"TRUE!"!<>"FALSE!",false<>?"TRUE!"!<>"FALSE!")"""
 
 test="""
 io:print(3
@@ -98,7 +84,7 @@ io:print(3
 test="""
 io:print(
 ¶World
-<* ¶Hello World!
+<: ¶Hello World!
 )
 """
 test="""
