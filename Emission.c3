@@ -72,6 +72,7 @@ fn String codegen(List{Token} tokens, String[] opredef, String name)
                             case "+++": yard.push(basebiop("{ z = {}; z.append(",x,"); z.append(",y,"); return z; }"));
                             case "<->": yard.push(basebiop("",x,"..",y,""));
                             case ",": yard.push(basebiop("",x,",",y,""));
+                            case ";": yard.push(basebiop("",x,";",y,""));
                             case "<>?": yard.push(basebiop("",x,"?",y,""));
                             case "!<>": yard.push(basebiop("",x,":",y,""));
                         }
@@ -80,9 +81,19 @@ fn String codegen(List{Token} tokens, String[] opredef, String name)
                 else
                 { io::printn("--CODEGEN ERROR: STACK UNDERFLOW--"); return "ERROR - STACK UNDERFLOW"; }
             case VAL: yard.push(token.text);
-            case PAREN: ;
+            case PAREN:
+                String parentype = token.text;
+                String z = yard[yard.len()-1];
+                yard.pop()!!;
+                switch (parentype)
+                {
+                    case ")": yard.push(z);//basebiop("","",z,"","")
+                    case "]": yard.push(basebiop("","[",z,"]",""));
+                    case "}": yard.push(basebiop("","`",z.treplace("`","``"),"`",""));
+                    default: yard.push(z);
+                }
             case IMPORT: modules.append("\nimport "); modules.append(yard[yard.len()-1]); modules.append(";"); yard.pop()!!;
-            case PRINT: ;//yard.push(io::printn();)
+            case PRINT: ;
             case NIL: yard.push("");
         }
     };
@@ -91,16 +102,3 @@ fn String codegen(List{Token} tokens, String[] opredef, String name)
     modules.append(text.str_view());
     return modules.str_view();
 }
-
-
-/*
-fn void main()
-{
-
-}
-*/
-
-/*
-cd ~/Documents/c3
-c3c compile-run Emission.c3
-*/
