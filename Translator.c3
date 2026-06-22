@@ -59,6 +59,7 @@ fn short order(String symbol)
         case "+++": return 1;
         case "<->": return 0;
         case ",": return -64;
+        case ";": return -128;
         case "<>?": return -6;
         case "!<>": return -6;
         case "": return 6;
@@ -172,6 +173,7 @@ fn List{Token} lexer(String text)
                             yard.pop()!!;
                         }
                     }
+                    result.push(token);
                     yard.push(token);
                     symbol = {};
                 }
