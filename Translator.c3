@@ -59,6 +59,7 @@ fn short order(String symbol)
         case "+++": return 1;
         case "<->": return 0;
         case ",": return -64;
+        case ";": return -128;
         case "<>?": return -6;
         case "!<>": return -6;
         case "": return 6;
@@ -75,7 +76,7 @@ fn List{Token} lexer(String text)
     uint charidx = 1;
     Token softtoken;
     softtoken.type = PAREN;
-    softtoken.text = "{";
+    softtoken.text = "(";
     softtoken.order = -32768;
     yard.push(softtoken);
     while (charidx < text.len)
@@ -172,6 +173,7 @@ fn List{Token} lexer(String text)
                             yard.pop()!!;
                         }
                     }
+                    result.push(token);
                     yard.push(token);
                     symbol = {};
                 }
@@ -179,8 +181,8 @@ fn List{Token} lexer(String text)
                 token.type = PAREN;
                 token.text = digit;
                 token.order = order(digit);
-                if (PARENOPEN.contains(digit)) { yard.push(token); }
-                if (PARENCLOSE.contains(digit)) { while (yard.len() > 1 && !(PARENOPEN.contains(yard[yard.len()-1].text))) { result.push(yard[yard.len()-1]); yard.pop()!!; }; yard.pop()!!;}
+if (PARENOPEN.contains(digit)) { yard.push(token); }
+                if (PARENCLOSE.contains(digit)) { while (yard.len() > 1 && !(PARENOPEN.contains(yard[yard.len()-1].text))) { result.push(yard[yard.len()-1]); yard.pop()!!; }; yard.pop()!!; result.push(token); }
             }
         }
         charidx ++;
@@ -188,14 +190,3 @@ fn List{Token} lexer(String text)
     while (yard.len()>1) { result.push(yard[yard.len()-1]); yard.pop()!!; }
     return result;
 }
-
-/*
-fn void main()
-{
-}
-*/
-
-/*
-cd ~/Documents/c3
-c3c compile-run Translator.c3
-*/
