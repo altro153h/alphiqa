@@ -4,7 +4,7 @@ import std::collections::list;
 
 const LETTERS = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_.:`;
 const NUMBERS = `1234567890.⁄_`;
-const MERGE = `¶``"'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_1234567890.:`;
+const MERGE = `¶``"'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$@_1234567890.:`;
 const PARENOPEN = `([{`;
 const PARENCLOSE = `)]}`;
 const PAREN = `()[]{}`;
@@ -16,8 +16,7 @@ enum TokenType
     OP,
     VAL,
     PAREN,
-    IMPORT,
-    PRINT,
+    KEY,
     NIL
 }
 
@@ -38,6 +37,7 @@ fn short order(String symbol)
         case "/": return 2;
         case "**": return 3;
         case "//": return 2;
+        case "///": return 2;
         case "%": return 0;
         case "&": return -1;
         case "|": return -1;
@@ -59,8 +59,14 @@ fn short order(String symbol)
         case "+++": return 1;
         case "<->": return 0;
         case ",": return -64;
-        case "<>?": return -6;
-        case "!<>": return -6;
+        case ";": return -128;
+        case "<>?/": return -6;
+        case "!<>/": return -6;
+        case "<>?": return -32;
+        case "!<>?": return -32;
+        case "!<>": return -32;
+        case "<>?*": return -32;
+        case "=": return -16;
         case "": return 6;
         default: return 63;
     }
@@ -75,13 +81,18 @@ fn List{Token} lexer(String text)
     uint charidx = 1;
     Token softtoken;
     softtoken.type = PAREN;
-    softtoken.text = "{";
+    softtoken.text = "(";
     softtoken.order = -32768;
     yard.push(softtoken);
+    String digit = "";
+    String prev = "(";
     while (charidx < text.len)
     {
-        String digit = text[charidx..charidx];
-        String prev = text[(charidx-1)..(charidx-1)];
+        prev = digit;
+        DString d_digit = {};
+        d_digit.append(text[charidx..charidx]);
+        if (text[charidx] & 0xC0 == 0xC0) { charidx++; while (text[charidx] & 0xC0 == 0x80) { d_digit.append(text[charidx..charidx]); charidx++; }; charidx--; }
+        digit = d_digit.str_view();
         if (MERGE.contains(digit)) {
             if (symbol.str_view().len > 0)
             {
@@ -107,9 +118,9 @@ fn List{Token} lexer(String text)
             //}
             if (digit != "")
             {
-                if ("¶".contains(digit))
+                if (digit == "¶")
                 {
-                    charidx += 2;
+                    charidx ++;
                     while (charidx < text.len && text[charidx..charidx] != "\n")
                     {
                         word.append(text[charidx..charidx]);
@@ -145,13 +156,20 @@ fn List{Token} lexer(String text)
                 Token token;
                 token.text = word.str_view();
                 token.order = 63;
-                if (word.str_view() == "IMPORT") { token.type = IMPORT; result.push(token); }
-                else if (word.str_view() == "PRINT") { token.type = PRINT; result.push(token); }
+                if (word.str_view() == "$IMPORT" || word.str_view() == "$PRINT" || word.str_view() == "$INT" || word.str_view() == "$FLOAT" || word.str_view() == "$STRING" || word.str_view() == "$EXEC" || word.str_view() == "$IMPORTSTRING") { token.type = KEY; result.push(token); }
                 else if (digit == "(") { token.type = FUNC; yard.push(token); }
                 else { token.type = VAL; result.push(token); }
                 word = {};
             }
-            if (digit != "" && digit != " " && digit != "\n" && !(PAREN.contains(digit)))
+            if (digit == "°")
+            {
+                Token token;
+                token.text = "DEG";
+                token.order = 63;
+                token.type = KEY;
+                result.push(token);
+            }
+            else if (digit != "" && digit != " " && digit != "\n" && !(PAREN.contains(digit)))
             {
                 symbol.append(digit);
                 if (PARENOPEN.contains(prev)) { Token token; token.text = "0"; token.type = VAL; result.push(token); }
@@ -180,7 +198,27 @@ fn List{Token} lexer(String text)
                 token.text = digit;
                 token.order = order(digit);
                 if (PARENOPEN.contains(digit)) { yard.push(token); }
-                if (PARENCLOSE.contains(digit)) { while (yard.len() > 1 && !(PARENOPEN.contains(yard[yard.len()-1].text))) { result.push(yard[yard.len()-1]); yard.pop()!!; }; yard.pop()!!;}
+                if (PARENCLOSE.contains(digit)) { while (yard.len() > 1 && !(PARENOPEN.contains(yard[yard.len()-1].text))) { result.push(yard[yard.len()-1]); yard.pop()!!; }; yard.pop()!!; result.push(token); }
+            }
+            else
+            {
+                if (symbol.str_view().len > 0 && prev != "\n")
+                {
+                    Token token;
+                    token.type = OP;
+                    token.text = symbol.str_view();
+                    token.order = order(symbol.str_view());
+                    if (yard.len() >= 1)
+                    {
+                        while (yard.len() >= 1 && (token.order < yard[yard.len()-1].order || (token.order == yard[yard.len()-1].order && token.order < 3 || token.type == FUNC)) && !(PARENOPEN.contains(yard[yard.len()-1].text)))
+                        {
+                            result.push(yard[yard.len()-1]);
+                            yard.pop()!!;
+                        }
+                    }
+                    yard.push(token);
+                    symbol = {};
+                }
             }
         }
         charidx ++;
@@ -188,14 +226,3 @@ fn List{Token} lexer(String text)
     while (yard.len()>1) { result.push(yard[yard.len()-1]); yard.pop()!!; }
     return result;
 }
-
-/*
-fn void main()
-{
-}
-*/
-
-/*
-cd ~/Documents/c3
-c3c compile-run Translator.c3
-*/
