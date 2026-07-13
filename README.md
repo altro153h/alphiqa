@@ -4,3 +4,15 @@ ALPHIQA TRANSPILER
 The tkinter GUI runs on python3.
 It is designed to be a midleground between Python (high level: slow runtime, easy syntax) and C3 (lower level: fast runtime, hard syntax). Alphiqa is hybrid (hybrid: fast runtime, easy syntax).
 I once called it a DSL though DSLs are domain specific.
+
+Indentations are optional.
+
+Code Example:
+
+const FOO = "Hello, World!"
+
+fn main(){
+    print(FOO)
+    print("BAR")
+    io:printfn("'5'-5 = %d",c'5'-5)
+}
