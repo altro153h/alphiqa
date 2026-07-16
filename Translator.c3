@@ -2,14 +2,15 @@ module translator;
 import std::io;
 import std::collections::list;
 
-const LETTERS = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_.\`;
-const NUMBERS = `1234567890.⁄_`;
+const LETTERS = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_\`;
+const NUMBERS = `1234567890⁄_`;
 const DIGITS = `1234567890`;
-const MERGE = `¶``"'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$@_1234567890.\`;
-const PARENOPEN = `([{`;
-const PARENCLOSE = `)]}`;
-const PAREN = `()[]{}`;
+const MERGE = `¶``"'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$@_1234567890\`;
+const PARENOPEN = `‹([{`;
+const PARENCLOSE = `›)]}`;
+const PAREN = `‹›()[]{}`;
 const QUOTE = ```"'`;
+//..
 
 enum TokenType
 {
@@ -20,7 +21,7 @@ enum TokenType
     KEY,
     NIL
 }
-//    PAREN,
+//    PAREN,“‘”’…æÚÆ
 
 struct Token
 {  
@@ -33,65 +34,72 @@ fn short order(String symbol)
 {
     switch (symbol)
     {
-        case "+": return 1;
-        case "-": return 1;
-        case "*": return 2;
-        case "/": return 2;
-        case "×": return 2;
-        case "÷": return 2;
-        case "**": return 3;
-        case "//": return 2;
-        case "///": return 2;
+        case "+": return 10;
+        case "-": return 10;
+        case "*": return 20;
+        case "/": return 20;
+        case "×": return 20;
+        case "÷": return 20;
+        case "**": return 30;
+        case "//": return 20;
+        case "///": return 20;
         case "%": return 0;
         case "<<": return 0;
         case ">>": return 0;
-        case "&": return -1;
-        case "|": return -1;
-        case "^": return -1;
-        case "&&": return -4;
-        case "||": return -5;
-        case "^^": return -5;
-        case "==": return -2;
-        case "!=": return -2;
-        case "<": return -3;
-        case ">": return -3;
-        case "<=": return -3;
-        case ">=": return -3;
-        case "~=": return -2;
-        case "===": return -2;
-        case "<*": return -3;
-        case "*>": return -3;
-        case "#": return 2;
-        case "+++": return 1;
-        case ">->": return -1;
-        case ">+>": return -1;
-        case ":": return -1;
-        case ",": return -64;
-        case ";": return -128;
-        case "<>?/": return -6;
-        case "!<>/": return -6;
-        case "<>?": return -32;
-        case "!<>?": return -32;
-        case "!<>": return -32;
-        case "<>?*": return -32;
-        case "=": return -16;
-        case "ineach": return -1;
-        case "in": return -3;
-        case "contains": return -3;
-        case "and": return -4;
-        case "or": return -5;
-        case "xor": return -5;
-        case "notand": return -4;
-        case "notor": return -5;
-        case "notxor": return -5;
-        case "bitand": return -1;
-        case "bitor": return -1;
-        case "bitxor": return -1;
+        case "&": return -10;
+        case "|": return -10;
+        case "^": return -10;
+        case "&&": return -40;
+        case "||": return -50;
+        case "^^": return -50;
+        case "==": return -20;
+        case "!=": return -20;
+        case "<": return -30;
+        case ">": return -30;
+        case "<=": return -30;
+        case ">=": return -30;
+        case "~=": return -20;
+        case "===": return -20;
+        case "<*": return -30;
+        case "*>": return -30;
+        case "#": return 20;
+        case "+++": return 10;
+        case ">->": return -10;
+        case ">+>": return -10;
+        case "??": return 150;
+        case "?": return -70;
+        case ":": return -70;
+        case ",": return -640;
+        case ";": return -1280;
+        case "=>": return -320;
+        case "<>?/": return -60;
+        case "!<>/": return -60;
+        case "<>?": return -320;
+        case "!<>?": return -320;
+        case "!<>": return -320;
+        case "<>?*": return -320;
+        case "=": return -160;
+        case ".": return 310;
+        case "=.": return -160;
+        case "->": return 150;
+        case " ": return 60;
+        case "ineach": return -10;
+        case "in": return -30;
+        case "contains": return -30;
+        case "and": return -40;
+        case "or": return -50;
+        case "xor": return -50;
+        case "notand": return -40;
+        case "notor": return -50;
+        case "notxor": return -50;
+        case "bitand": return -10;
+        case "bitor": return -10;
+        case "bitxor": return -10;
         case "at": return 0;
         case "slice": return 0;
-        //case "module": return 31;
-        case "": return 6;
-        default: return 63;
+        //case "withfile": return -160;
+        case "": return 60;//module
+        default: return 630;
     }
 }
 
@@ -106,19 +114,80 @@ fn DString prefixed(String quoted, String prefix)
         switch (pre)
         {
             case 'c': container = `'`; quotes = quotes.treplace(`'`,`\x27`);
-            case 'h': container = ``; quotes = `$I_DONT_EXIST`;
+            case 'h': container = `#`; quotes = ``;//$I_DONT_EXIST'.
+            case '\\': container = `#`;
             case '$': container = ``;
             case 's': previous = previous.tconcat(`(String)`);
+            case 'z': previous = previous.tconcat(`(ZString)`);
+            //case 'd': previous = previous.tconcat(`(DString)`); container = `{}`;
             case 'b': previous = previous.tconcat(`(char[])`);
             case 'r': container = "`"; quotes = quotes.treplace("`","``");
             default: ;
         }
     }
     if (prefix.contains("x")) { previous = previous.tconcat("x"); }
-    if (!prefix.contains("r") && !prefix.contains("$")) { quotes = quotes.treplace(`"`,`\x22`); }
+    if (!prefix.contains("r") && !prefix.contains("$")) { quotes = quotes.treplace(`"`,`\x22`).treplace("\n",`\n`); }
     DString word = {};
-    word.append(`(`); word.append(previous); word.append(container); word.append(quotes); word.append(container); word.append(`)`);
+    word.append((container == `#`) ? `/*` : `(`); word.append(previous); word.append(container); word.append(quotes); word.append(container); word.append((container == `#`) ? `*/` : `)`); // if  { word.append(`)` } {  }word.append()
     return word;
+}
+
+fn void operator(String symbol, List{Token}* result, List{Token}* yard)
+{
+    if (symbol == "++" || symbol == "--" || symbol == "!!")
+    {
+        Token token;
+        token.type = KEY; //PARENVAL
+        token.text = symbol;//.tconcat(";")
+        token.order = -96; //128 // yard.pop()!!; 
+        //if ((*yard).len() >= 1) { while ((*yard).len() > 1 && !(PARENOPEN.contains((*yard)[(*yard).len()-1].text))) { result.push((*yard)[(*yard).len()-1]); yard.pop()!!; } }
+        result.push(token);
+    }
+    else
+    {
+        bool negative = (symbol[^1] == '-' && symbol != "-");
+        Token token;
+        token.type = OP;
+        token.text = negative ? symbol[0..^1] : symbol;
+        
+        token.order = ((symbol[^1] == '=' && symbol != "=" && symbol[^2..^1] != "==" && symbol[^2..^1] != "~=" && symbol[^2..^1] != "!=" && symbol[^2..^1] != "<=" && symbol[^2..^1] != ">=") ? -160 : order(((symbol[0] == '!' && symbol != "!=") || (symbol[0] == '~' && symbol != "~=")) ? symbol[1..^1] : symbol));
+        if ((*yard).len() >= 1)
+        {
+            while (yard.len() >= 1 && (token.order < (*yard)[(*yard).len()-1].order || (token.order == (*yard)[(*yard).len()-1].order && token.order < 30 || token.type == FUNC)) && !(PARENOPEN.contains((*yard)[(*yard).len()-1].text)))
+            {
+                result.push((*yard)[(*yard).len()-1]);
+                yard.pop()!!;
+            }
+        }
+        if (negative) { symbol = symbol.tconcat("-"); }
+        yard.push(token);
+    }
+}
+
+fn void parse_word(String word, List{Token}* result, List{Token}* yard, String digit, String prev)
+{
+    Token token;
+    token.text = word;
+    if (token.text[token.text.len-1] == '\\') { token.text = token.text[0..token.text.len-2]; }
+    //if (token.text == "String") { token.text = "AIQAString"; }
+    //if (token.text == "StringC3") { token.text = "String"; }
+    //if (token.text == "StringC") { token.text = "ZString"; }
+    //if ((*yard).len() >= 1 && (*yard)[(*yard).len()-1].text[^1] == '-' && (*yard)[(*yard).len()-1].text != "-") { (*yard)[(*yard).len()-1].text = (*yard)[(*yard).len()-1].text[0..^2]; } // Token z =  yard.pop()!!; yard.push(z);
+    //token.text = "-".tconcat(token.text);//
+    char endof = token.text[token.text.len-1];
+    if (DIGITS.contains(token.text[0..0]))
+    {
+        if (endof == 'b' && !token.text.contains("x")) { token.text = "0b".tconcat(token.text[0..token.text.len-2]); }
+        if (endof == 'o') { token.text = "0o".tconcat(token.text[0..token.text.len-2]); }
+        if (endof == 'x') { token.text = "0x".tconcat(token.text[0..token.text.len-2]); }
+    }
+    //if (prev == ".") { token.text = ".".tconcat(token.text); }
+    token.order = 630;
+    if (token.text == "$IMPORT" || token.text == "$PRINT" || token.text == "$INT" || token.text == "$FLOAT" || token.text == "$STRING" || token.text == "$EXEC" || token.text == "$IMPORTSTRING" || token.text == "($I_DONT_EXIST)" || token.text == "$IMPORTCOLOR" || token.text == "do" || token.text == "then") { while ((*yard).len()>1 && !(PARENOPEN.contains((*yard)[(*yard).len()-1].text))) { result.push((*yard)[(*yard).len()-1]); yard.pop()!!; }; token.type = KEY; result.push(token); }//  || token.text == "end" || token.text == "else" || token.text == "panic"
+    else if (PARENOPEN.contains(digit)) { token.type = FUNC; yard.push(token); }
+    else if (token.text == "ineach" || token.text == "in" || token.text == "contains" || token.text == "and" || token.text == "or" || token.text == "xor" || token.text == "notand" || token.text == "notor" || token.text == "notxor" || token.text == "bitand" || token.text == "bitor" || token.text == "bitxor" || token.text == "at" || token.text == "slice") { token.type = OP; token.order = order(token.text); if ((*yard).len() >= 1) { while ((*yard).len() >= 1 && (token.order < (*yard)[(*yard).len()-1].order || (token.order == (*yard)[(*yard).len()-1].order && token.order < 30 || token.type == FUNC)) && !(PARENOPEN.contains((*yard)[(*yard).len()-1].text))) { result.push((*yard)[(*yard).len()-1]); yard.pop()!!; } }; yard.push(token); }
+    //else if (result.len() >= 1 && result[result.len()-1] == "include") { result.pop()!!;  }`` == "(" token; (*yard)[(*yard).len()-1].text.len- '1';
+    else { token.type = VAL; result.push(token); }
 }
 
 fn List{Token} lexer(String text)
@@ -128,7 +197,7 @@ fn List{Token} lexer(String text)
     List{Token} yard;
     DString symbol = {};
     DString word = {};
-    ulong charidx = 1;
+    sz charidx = 1;
     Token softtoken;
     softtoken.type = PAREN;
     softtoken.text = "(";
@@ -145,25 +214,9 @@ fn List{Token} lexer(String text)
         d_digit.append(text[charidx..charidx]);
         if (text[charidx] & 0xC0 == 0xC0) { charidx++; while (text[charidx] & 0xC0 == 0x80) { d_digit.append(text[charidx..charidx]); charidx++; }; charidx--; }
         digit = d_digit.str_view();
-        //next = (charidx+1==(ulong)text.len)?"":text[(charidx+1)..(charidx+1)];
+        if (charidx+1 < text.len) { next = text[(charidx+1)..(charidx+1)]; } else { next = `)`; }; //(charidx+1==(ulong)text.len)?"":text[(charidx+1)..(charidx+1)]; ?? ``char`` ? :
         if (MERGE.contains(digit)) {
-            if (symbol.str_view().len > 0)
-            {
-                Token token;
-                token.type = OP;
-                token.text = symbol.str_view();
-                token.order = order(symbol.str_view());
-                if (yard.len() >= 1)
-                {
-                    while (yard.len() >= 1 && (token.order < yard[yard.len()-1].order || (token.order == yard[yard.len()-1].order && token.order < 3 || token.type == FUNC)) && !(PARENOPEN.contains(yard[yard.len()-1].text)))
-                    {
-                        result.push(yard[yard.len()-1]);
-                        yard.pop()!!;
-                    }
-                }
-                yard.push(token);
-                symbol = {};
-            }
+            if (symbol.str_view().len > 0) { operator(symbol.str_view(), &result, &yard); symbol = {}; }
             //else if (yard.len() > 1)
             //{:
             //    sz length = yard.len();
@@ -171,6 +224,8 @@ fn List{Token} lexer(String text)
             //}:
             if (digit != "")
             {
+                if (prev == ".") { word.append("."); }
+                if (prev == " " && word.str_view().len > 0) { if (word.str_view() == "include") { word = {}; while (text[charidx] != '\n') { charidx++; }; continue; } else { parse_word(word.str_view(), &result, &yard, digit, prev); word = {}; operator(" ", &result, &yard); } }
                 if (digit == "¶")
                 {
                     String prefix = word.str_view();
@@ -206,30 +261,12 @@ fn List{Token} lexer(String text)
             {
                 while (charidx < text.len && text[charidx..charidx] != "\n") { charidx++; }
             }
-            if (word.str_view().len > 0)// && !((digit == " " || digit == "\n") && (next == " " || next == "\n"))
-            {
-                Token token;
-                token.text = word.str_view();
-                if (token.text[token.text.len-1] == '\\') { token.text = token.text[0..token.text.len-2]; }
-                char endof = token.text[token.text.len-1];
-                if (DIGITS.contains(token.text[0..0]))
-                {
-                    if (endof == 'b' && !token.text.contains("x")) { token.text = "0b".tconcat(token.text[0..token.text.len-2]); }
-                    if (endof == 'o') { token.text = "0o".tconcat(token.text[0..token.text.len-2]); }
-                    if (endof == 'x') { token.text = "0x".tconcat(token.text[0..token.text.len-2]); }
-                }
-                token.order = 63;
-                if (token.text == "$IMPORT" || token.text == "$PRINT" || token.text == "$INT" || token.text == "$FLOAT" || token.text == "$STRING" || token.text == "$EXEC" || token.text == "$IMPORTSTRING" || token.text == "($I_DONT_EXIST)" || token.text == "$IMPORTCOLOR" || token.text == "do" || token.text == "then") { while (yard.len()>1 && !(PARENOPEN.contains(yard[yard.len()-1].text))) { result.push(yard[yard.len()-1]); yard.pop()!!; }; token.type = KEY; result.push(token); }//  || token.text == "end" || token.text == "else"
-                else if (digit == "(") { token.type = FUNC; yard.push(token); }
-                else if (token.text == "ineach" || token.text == "in" || token.text == "contains" || token.text == "and" || token.text == "or" || token.text == "xor" || token.text == "notand" || token.text == "notor" || token.text == "notxor" || token.text == "bitand" || token.text == "bitor" || token.text == "bitxor" || token.text == "at" || token.text == "slice") { token.type = OP; token.order = order(token.text); if (yard.len() >= 1) { while (yard.len() >= 1 && (token.order < yard[yard.len()-1].order || (token.order == yard[yard.len()-1].order && token.order < 3 || token.type == FUNC)) && !(PARENOPEN.contains(yard[yard.len()-1].text))) { result.push(yard[yard.len()-1]); yard.pop()!!; } }; yard.push(token); }
-                else { token.type = VAL; result.push(token); }
-                word = {};
-            }
+            if (word.str_view().len > 0 && digit != " ") { parse_word(word.str_view(), &result, &yard, digit, prev); word = {}; }// && !((digit == " " || digit == "\n") && (next == " " || next == "\n"))
             if (digit == "°")
             {
                 Token token;
                 token.text = "DEG";
-                token.order = 63;
+                token.order = 630;
                 token.type = KEY;
                 result.push(token);
             }
@@ -240,23 +277,7 @@ fn List{Token} lexer(String text)
             }
             else if (yard.len() >= 1 && PAREN.contains(digit))
             {
-                if (symbol.str_view().len > 0 && prev != "" && prev != " " && prev != "\n" && prev != ";" && prev != "," && prev != "\\")
-                {
-                    Token token;
-                    token.type = OP;
-                    token.text = symbol.str_view();
-                    token.order = order(symbol.str_view());
-                    if (yard.len() >= 1)
-                    {
-                        while (yard.len() >= 1 && (token.order < yard[yard.len()-1].order || (token.order == yard[yard.len()-1].order && token.order < 3 || token.type == FUNC)) && !(PARENOPEN.contains(yard[yard.len()-1].text)))
-                        {
-                            result.push(yard[yard.len()-1]);
-                            yard.pop()!!;
-                        }
-                    }
-                    yard.push(token);
-                    symbol = {};
-                }
+                if (symbol.str_view().len > 0 && prev != "" && prev != " " && prev != "\n" && prev != ";" && prev != "," && prev != "\\") { operator(symbol.str_view(), &result, &yard); symbol = {}; }
                 Token token;
                 token.type = PAREN;
                 token.text = digit;
@@ -264,57 +285,22 @@ fn List{Token} lexer(String text)
                 if (PARENOPEN.contains(digit)) { yard.push(token); result.push(token); }
                 if (PARENCLOSE.contains(digit)) { while (yard.len() > 1 && !(PARENOPEN.contains(yard[yard.len()-1].text))) { result.push(yard[yard.len()-1]); yard.pop()!!; }; yard.pop()!!; result.push(token); if (yard.len() >= 1 && yard[yard.len()-1].type == FUNC) { result.push(yard[yard.len()-1]); yard.pop()!!; } }
             }
-            else if ((digit == ";" || digit == "," || (digit == "\n" && prev != "\\" && prev != "}" && !PARENOPEN.contains(prev) && symbol.str_view() == "")))//( && next.len > 0 && LETTERS.contains(next))yard[yard.len()-1]result[result.len()-1].type != OP ||  && (result.len() >= 1 && result[result.len()-1].type != KEY)!. && next != "{" && next != "}"
+            else if ((digit == ";" || digit == "," || (digit == "\n" && prev != "\\" && prev != "}" && !PARENOPEN.contains(prev) && (!PARENCLOSE.contains(next) || next == "}") && symbol.str_view() == "" && (MERGE.contains(next)))))//( && next.len > 0 &&  || LETTERS.contains(next))yard[yard.len()-1]result[result.len()-1].type != OP ||  && (result.len() >= 1 && result[result.len()-1].type != KEY)!. && next != "{" && next != "}"
             {
-                if (symbol.str_view().len > 0 && prev != "\n" && prev != ";" && prev != "\\" && prev != "" && prev != " ")
-                {
-                    Token token;
-                    token.type = OP;
-                    token.text = symbol.str_view();
-                    token.order = order(symbol.str_view());
-                    if (yard.len() >= 1)
-                    {
-                        while (yard.len() >= 1 && (token.order < yard[yard.len()-1].order || (token.order == yard[yard.len()-1].order && token.order < 3 || token.type == FUNC)) && !(PARENOPEN.contains(yard[yard.len()-1].text)))
-                        {
-                            result.push(yard[yard.len()-1]);
-                            yard.pop()!!;
-                        }
-                    }
-                    yard.push(token);
-                    symbol = {};
-                }
+                if (symbol.str_view().len > 0 && prev != "\n" && prev != ";" && prev != "\\" && prev != "" && prev != " ") { operator(symbol.str_view(), &result, &yard); symbol = {}; }
                 Token token;
                 token.type = PAREN;//OP//()(digit==",") ? "," : ";"
                 token.text = digit;
-                token.order = (digit==",") ? -64 : -128;
-                if (yard.len() >= 1)
-                {
-                    while (yard.len()>1 && !(PARENOPEN.contains(yard[yard.len()-1].text))) { result.push(yard[yard.len()-1]); yard.pop()!!; }
-                }
+                token.order = (digit==",") ? -640 : -1280;
+                if (yard.len() >= 1) { while (yard.len()>1 && !(PARENOPEN.contains(yard[yard.len()-1].text))) { result.push(yard[yard.len()-1]); yard.pop()!!; } }
                 result.push(token);
             }
             else
             {
-                if (symbol.str_view().len > 0 && prev != "" && prev != " " && prev != "\n" && prev != ";" && prev != "," && prev != "\\")
-                {
-                    Token token;
-                    token.type = OP;
-                    token.text = symbol.str_view();
-                    token.order = order(symbol.str_view());
-                    if (yard.len() >= 1)
-                    {
-                        while (yard.len() >= 1 && (token.order < yard[yard.len()-1].order || (token.order == yard[yard.len()-1].order && token.order < 3 || token.type == FUNC)) && !(PARENOPEN.contains(yard[yard.len()-1].text)))
-                        {
-                            result.push(yard[yard.len()-1]);
-                            yard.pop()!!;
-                        }
-                    }
-                    yard.push(token);
-                    symbol = {};
-                }
+                if (symbol.str_view().len > 0 && prev != "" && prev != " " && prev != "\n" && prev != ";" && prev != "," && prev != "\\") { operator(symbol.str_view(), &result, &yard); symbol = {}; }
             }
         }
-        //if (result.len() > 0) { if (result[0].type == PAREN && result[0].text == "soft(") { yard.push(result[0]); result.remove_at(0); } } io::printn(result[0]);soft
+        //if (result.len() > 0) { if (result[0].type == PAREN && result[0].text == "soft(") { yard.push(result[0]); result.remove_at(0); } } io::printn(result[0]);soft if (symbol != " ")
         charidx ++;
     }
     while (yard.len()>1) { result.push(yard[yard.len()-1]); yard.pop()!!; }
