@@ -3,10 +3,10 @@ import subprocess
 import sys
 import time
 import tkinter
-#import threading
+#import threading 
 
 O=0
-stdout_data = ''#[] help("threading.Thread"){'stdout':}['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']
+stdout_data = ''#[] help("threading.Thread"){'stdout':}['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']['stdout']-1
 appending_line = '1.0'
 
 try:
@@ -21,22 +21,24 @@ try:
     executable_target = os.path.join(base,"alphiqa_project")
 except subprocess.CalledProcessError as e:
     stdout_data = f"\n--PIPELINE ERROR: process exited with error code: {e.returncode}--\nDiagnostics:\n{e.stderr}"
-    shell_update()
+    #shell_update()1
     print(f"\n--PIPELINE ERROR: process exited with error code: {e.returncode}--\nDiagnostics:\n{e.stderr}")
 
 def io_thread(binary_out,sandbox_result):
     global stdout_data
     while True:
         try:
-            raw_chunk = sandbox_result.stdout.buffer.read1()#()
-            if not raw_chunk and sandbox_result.poll() is not None: break
+            raw_chunk = sandbox_result.stdout.buffer.read1() #help("subprocess.Popen") .poll
+            if not raw_chunk and sandbox_result.poll() is not None: break #yield 
             if raw_chunk:
                 chunk = raw_chunk.decode('utf-8',errors='ignore'); stdout_data += chunk; shell_update();
                 if len(chunk) >= 3 and chunk[0:3] == '\x1bxm':# or len(chunk) >= 5 and chunk[0:5] == '\x1b[50m'
+                    #if chunk == '\x1bxm--DONE--': breakelse: 
                     exec(chunk[3:]);
-                else: print(chunk); ##stdout_data +=function()#globals,functionreturn''yield
+                else: print(chunk);
+                yield chunk##stdout_data +=function()#globals,functionreturn''yield##
         except Exception as e: stdout_data = f"\x1b[91m--THREADING ERROR: io_thread error code: {e}--\x1b[0m"; break
-#    yield 
+    yield #
         
 def EXEC(run=True,O=0):#1"1.0"''''
     global shell
@@ -50,7 +52,7 @@ def EXEC(run=True,O=0):#1"1.0"''''
         stdout += "\x1b[93m--OPTIONAL ERROR: code missing or nil--\n\x1b[0m"
     try:
         stdout_data += "--COMPILING INTO C3--\n"
-        engine_result = subprocess.run([executable_target,"("+code+")"],capture_output=True,text=True,check=True,env=os.environ,cwd=base)
+        engine_result = subprocess.run([executable_target,code+'\n'],capture_output=True,text=True,check=True,env=os.environ,cwd=base)#//"("++")"#'\n'+ ;
         stdout_data += engine_result.stdout.strip() + "\n\n"
         time.sleep(0.1)
         if not os.path.exists(sandbox):
@@ -92,9 +94,9 @@ root.title('Alphiqa')
 root.geometry('800x600')
 root.configure(bg='#121212')
 
-compileexec = tkinter.Button(root,text='[COMPILE TO EXEC]',activeforeground='#00FF00',font=('Menlo',15),relief='flat',cursor='hand',command=lambda: EXEC(False,O))
+compileexec = tkinter.Button(root,text='[ COMPILE TO EXEC ]',activeforeground='#00FF00',font=('Menlo',15),relief='flat',cursor='hand',command=lambda: EXEC(False,O))
 compileexec.pack()
-run = tkinter.Button(root,text='[COMPILE - RUN]',activeforeground='#00FF00',font=('Menlo',15),relief='flat',cursor='hand',command=lambda: EXEC(True,O))
+run = tkinter.Button(root,text='[ COMPILE - RUN - ( BETA ) ]',activeforeground='#00FF00',font=('Menlo',15),relief='flat',cursor='hand',command=lambda: EXEC(True,O))#ALPHA
 run.pack()
 
 main_pane = tkinter.PanedWindow(root,orient='vertical',bg="#121212",bd=0,sashrelief="flat")
@@ -165,10 +167,3 @@ def shell_update():
 shell_update()
 
 root.mainloop()
-
-#have been
-
-#help("tkinter.Text.update")
-#help("tkinter.Text.see")
-#    shell.see('end')
-#    shell.update()
